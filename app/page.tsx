@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
-import TechStack from '@/components/TechStack';
+import HowItWorks from '@/components/HowItWorks';
 import Footer from '@/components/Footer';
 
 // R3F must be client-only; dynamic import with ssr:false keeps the bundle
@@ -20,7 +20,7 @@ export default function Page() {
       <main className="relative z-0 min-h-screen w-full bg-ink-900 text-white">
         <Hero />
         <Features />
-        <TechStack />
+        <HowItWorks />
         <Footer />
       </main>
 
