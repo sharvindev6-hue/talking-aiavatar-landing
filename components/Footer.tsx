@@ -73,7 +73,7 @@ export default function Footer() {
                 href={l.href}
                 className="transition-colors hover:text-white"
                 target={l.href.startsWith('http') ? '_blank' : undefined}
-                rel={l.href.startsWith('http') ? 'noreferrer' : undefined}
+                rel={l.href.startsWith('http') ? 'noopener noreferrer' : undefined}
               >
                 {l.label}
               </a>
