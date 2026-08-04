@@ -13,61 +13,43 @@
    Replace either asset to update that viewport's background video.
    ============================================================================= */
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';const DESKTOP_VIDEO_SRC = '/hero-bg.mp4';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+const DESKTOP_VIDEO_SRC = '/hero-bg.mp4';
 const MOBILE_VIDEO_SRC = '/hero-bg-mobile.mp4';
-const DESKTOP_POSTER_SRC = '/hero-poster.jpg';
-const MOBILE_POSTER_SRC = '/hero-poster-mobile.jpg';
+
 function ResponsiveHeroVideo() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const updateViewport = () => {
-      setIsMobile(mediaQuery.matches);
-      setIsReady(true);
-    };
-
-    updateViewport();
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', updateViewport);
-      return () => mediaQuery.removeEventListener('change', updateViewport);
-    }
-
-    mediaQuery.addListener(updateViewport);
-    return () => mediaQuery.removeListener(updateViewport);
-  }, []);
-
-  if (!isReady) return null;
-
-  const videoSrc = isMobile ? MOBILE_VIDEO_SRC : DESKTOP_VIDEO_SRC;
-  const posterSrc = isMobile ? MOBILE_POSTER_SRC : DESKTOP_POSTER_SRC;
+  const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <video
-      key={videoSrc}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="auto"
-      poster={posterSrc}
-      aria-hidden="true"
-      className="relative z-[1] h-full w-full object-cover"
-    >
-      <source src={videoSrc} type="video/mp4" />
-    </video>
+    <div className="hero-video" aria-hidden="true">
+      <div className={`hero-video-fallback ${isPlaying ? 'hero-video-fallback-hidden' : ''}`} />
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/hero-poster.jpg"
+        onPlaying={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onError={() => setIsPlaying(false)}
+        className={`hero-video-player h-full w-full object-cover ${isPlaying ? 'hero-video-player-visible' : ''}`}
+      >
+        {/* The browser selects the matching asset before requesting a source. */}
+        <source media="(max-width: 767px)" src={MOBILE_VIDEO_SRC} type="video/mp4" />
+        <source src={DESKTOP_VIDEO_SRC} type="video/mp4" />
+      </video>
+    </div>
   );
 }
-
 
 export default function Hero() {
   return (
     <section className="relative h-[100svh] min-h-screen w-full overflow-hidden bg-ink-900">
       {/* ---------------- LAYER 1: Background video + overlays ---------------- */}
       <div className="absolute inset-0 z-0">
-        <div className="hero-video-fallback" aria-hidden="true" />
         <ResponsiveHeroVideo />
 
         {/* Vignette: pulls edges into deep black */}

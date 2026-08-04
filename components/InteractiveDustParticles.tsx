@@ -58,10 +58,57 @@ function useParticleBuffers(count: number) {
   }, [count]);
 }
 
+function WebGLContextGuard() {
+  const { gl, invalidate } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+    };
+    const handleContextRestored = () => {
+      invalidate();
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
+    };
+  }, [gl, invalidate]);
+
+  return null;
+}
+
 function ParticleField() {
   const pointsRef = useRef<THREE.Points>(null);
-  const { positions, velocities } = useParticleBuffers(PARTICLE_COUNT);
   const { viewport, size } = useThree();
+  const particleCount = size.width < 768 ? 1200 : PARTICLE_COUNT;
+  const { positions, velocities } = useParticleBuffers(particleCount);
+  const isPaused = useRef(false);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePausedState = () => {
+      isPaused.current = document.hidden || reducedMotion.matches;
+    };
+    updatePausedState();
+    document.addEventListener('visibilitychange', updatePausedState);
+    if (reducedMotion.addEventListener) {
+      reducedMotion.addEventListener('change', updatePausedState);
+    } else {
+      reducedMotion.addListener(updatePausedState);
+    }
+    return () => {
+      document.removeEventListener('visibilitychange', updatePausedState);
+      if (reducedMotion.removeEventListener) {
+        reducedMotion.removeEventListener('change', updatePausedState);
+      } else {
+        reducedMotion.removeListener(updatePausedState);
+      }
+    };
+  }, []);
 
   // Mouse position in world space. Default far away so particles rest.
   const mouseWorld = useRef(new THREE.Vector3(999, 999, 999));
@@ -110,6 +157,8 @@ function ParticleField() {
   }, [size, viewport]);
 
   useFrame(() => {
+    if (isPaused.current) return;
+
     const positionsAttr = pointsRef.current?.geometry.attributes.position as
       | THREE.BufferAttribute
       | undefined;
@@ -121,7 +170,7 @@ function ParticleField() {
     const X_HALF = X_VOLUME / 2;
     const Y_HALF = Y_VOLUME / 2;
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < particleCount; i++) {
       const ix = i * 3;
       const dx = m.x - positions[ix];
       const dy = m.y - positions[ix + 1];
@@ -173,7 +222,7 @@ function ParticleField() {
         <bufferAttribute
           attach="attributes-position"
           args={[positions, 3]}
-          count={PARTICLE_COUNT}
+          count={particleCount}
         />
       </bufferGeometry>
       <pointsMaterial
@@ -192,7 +241,8 @@ function ParticleField() {
 export default function InteractiveDustParticles() {
   return (
     <Canvas
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
+      frameloop="always"
       gl={{
         antialias: true,
         alpha: true,
@@ -206,6 +256,7 @@ export default function InteractiveDustParticles() {
         pointerEvents: 'none',
       }}
     >
+      <WebGLContextGuard />
       <ParticleField />
     </Canvas>
   );

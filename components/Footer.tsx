@@ -9,11 +9,7 @@
 import { motion } from 'framer-motion';
 
 const LINKS = [
-  { label: 'Privacy',     href: '/privacy' },
-  { label: 'Terms',       href: '/terms' },
-  { label: 'Changelog',   href: '/changelog' },
-  { label: 'Twitter / X', href: 'https://twitter.com' },
-  { label: 'GitHub',      href: 'https://github.com' },
+  { label: 'GitHub', href: 'https://github.com/sharvindev6-hue/talking-aiavatar-landing' },
 ];
 
 export default function Footer() {
