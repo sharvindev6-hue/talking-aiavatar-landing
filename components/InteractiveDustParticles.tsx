@@ -67,19 +67,46 @@ function ParticleField() {
   const mouseWorld = useRef(new THREE.Vector3(999, 999, 999));
 
   useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      // Pixel -> NDC (-1..1)
-      const ndcX = (e.clientX / size.width) * 2 - 1;
-      const ndcY = -((e.clientY / size.height) * 2 - 1);
+    const updatePointerPosition = (clientX: number, clientY: number) => {
+      // Pixel -> NDC (-1..1), shared by mouse and touch input.
+      const ndcX = (clientX / size.width) * 2 - 1;
+      const ndcY = -((clientY / size.height) * 2 - 1);
       mouseWorld.current.set(
         ndcX * (viewport.width / 2),
         ndcY * (viewport.height / 2),
         0
       );
     };
-    // Window-level listener: tracks mouse anywhere on the page
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      updatePointerPosition(e.clientX, e.clientY);
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) updatePointerPosition(touch.clientX, touch.clientY);
+    };
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) updatePointerPosition(touch.clientX, touch.clientY);
+    };
+    const handleTouchEnd = () => {
+      mouseWorld.current.set(999, 999, 999);
+    };
+
+    // Window-level listeners keep the field active while the user touches
+    // anywhere on the page. The canvas remains pointer-events-none for links.
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+    };
   }, [size, viewport]);
 
   useFrame(() => {

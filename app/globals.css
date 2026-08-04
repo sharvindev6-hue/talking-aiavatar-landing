@@ -99,6 +99,16 @@ body {
   z-index: 5;
 }
 
+/* Video fallback posters remain visible while autoplay is blocked or loading. */
+.hero-video-fallback {
+  position: absolute;
+  inset: 0;
+  background-image: url('/hero-poster.jpg');
+  background-position: center;
+  background-size: cover;
+  z-index: 0;
+}
+
 /* Vignette gradient layered over hero video */
 .vignette-overlay {
   position: absolute;
@@ -111,6 +121,12 @@ body {
     rgba(0, 0, 0, 0.95) 100%
   );
   z-index: 3;
+}
+
+@media (max-width: 767px) {
+  .hero-video-fallback {
+    background-image: url('/hero-poster-mobile.jpg');
+  }
 }
 
 /* Slow shimmer line for subtle motion on top borders */

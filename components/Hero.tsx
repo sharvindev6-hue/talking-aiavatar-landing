@@ -9,31 +9,66 @@
               as a full-page fixed layer so motes cover the whole scroll)
      Layer 3: typography + glowing CTA
 
-   To swap the background video: replace /public/hero-bg.mp4
-   (or change the <source src> to a CDN URL).
+   Desktop uses /public/hero-bg.mp4; mobile uses /public/hero-bg-mobile.mp4.
+   Replace either asset to update that viewport's background video.
    ============================================================================= */
 
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';const DESKTOP_VIDEO_SRC = '/hero-bg.mp4';
+const MOBILE_VIDEO_SRC = '/hero-bg-mobile.mp4';
+const DESKTOP_POSTER_SRC = '/hero-poster.jpg';
+const MOBILE_POSTER_SRC = '/hero-poster-mobile.jpg';
+function ResponsiveHeroVideo() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-const VIDEO_SRC = '/hero-bg.mp4'; // <-- swap your video file here
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const updateViewport = () => {
+      setIsMobile(mediaQuery.matches);
+      setIsReady(true);
+    };
+
+    updateViewport();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateViewport);
+      return () => mediaQuery.removeEventListener('change', updateViewport);
+    }
+
+    mediaQuery.addListener(updateViewport);
+    return () => mediaQuery.removeListener(updateViewport);
+  }, []);
+
+  if (!isReady) return null;
+
+  const videoSrc = isMobile ? MOBILE_VIDEO_SRC : DESKTOP_VIDEO_SRC;
+  const posterSrc = isMobile ? MOBILE_POSTER_SRC : DESKTOP_POSTER_SRC;
+
+  return (
+    <video
+      key={videoSrc}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      poster={posterSrc}
+      aria-hidden="true"
+      className="relative z-[1] h-full w-full object-cover"
+    >
+      <source src={videoSrc} type="video/mp4" />
+    </video>
+  );
+}
+
 
 export default function Hero() {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-ink-900">
+    <section className="relative h-[100svh] min-h-screen w-full overflow-hidden bg-ink-900">
       {/* ---------------- LAYER 1: Background video + overlays ---------------- */}
       <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          // poster shows a deep black until video kicks in
-          poster="/hero-poster.jpg"
-          className="h-full w-full object-cover"
-        >
-          <source src={VIDEO_SRC} type="video/mp4" />
-        </video>
+        <div className="hero-video-fallback" aria-hidden="true" />
+        <ResponsiveHeroVideo />
 
         {/* Vignette: pulls edges into deep black */}
         <div className="vignette-overlay" />
