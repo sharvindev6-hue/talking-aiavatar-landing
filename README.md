@@ -1,5 +1,7 @@
 # Avatar AI — Landing Page
 
+🌐 **Live:** https://talking-aiavatar-landing.vercel.app/
+
 Cinematic landing page for an AI talking-avatar app (Kimi intelligence + ElevenLabs voice).
 
 ## Stack
